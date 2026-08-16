@@ -12,7 +12,7 @@ using UnityEngine;
 namespace QuickSell
 {
 
-    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.1.0")]
+    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.2.0")]
     [BepInDependency("com.SPT.core", "4.1.0")]
     [BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
@@ -37,8 +37,8 @@ namespace QuickSell
             Chainloader.PluginInfos.TryGetValue(UIFixesPluginId, out var pluginInfo) &&
             pluginInfo?.Metadata?.Version >= UIFixesMinimumVersion;
 
-        internal static ConfigEntry<KeyboardShortcut> KeybindTraders;
-        internal static ConfigEntry<KeyboardShortcut> KeybindFlea;
+        internal static ConfigEntry<KeyboardShortcut> KeybindBestPrice;
+        internal static ConfigEntry<KeyboardShortcut> KeybindBestPriceNoConfirmation;
 
         public static ManualLogSource LogSource;
 
@@ -67,8 +67,16 @@ namespace QuickSell
 
                 if (!DisableKeybinds)
                 {
-                    KeybindFlea = Config.Bind("QuickSell", "SellFlea", new KeyboardShortcut(KeyCode.N), "Quicksell on the Flea");
-                    KeybindTraders = Config.Bind("QuickSell", "SellTraders", new KeyboardShortcut(KeyCode.M), "QuickSell to Traders");
+                    KeybindBestPrice = Config.Bind(
+                        "QuickSell",
+                        "BestPrice",
+                        new KeyboardShortcut(KeyCode.M),
+                        "Sell to the best trader or on the flea, whichever gives the best net price (with confirmation)");
+                    KeybindBestPriceNoConfirmation = Config.Bind(
+                        "QuickSell",
+                        "BestPriceNoConfirmation",
+                        new KeyboardShortcut(KeyCode.N),
+                        "Immediately sell to the best trader or on the flea, whichever gives the best net price");
                     KeybindPatches.Enable();
                 }
             }

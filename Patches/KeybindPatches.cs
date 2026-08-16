@@ -41,7 +41,7 @@ namespace QuickSell.Patches
                 ItemUiContext __instance,
                 ContextInteractions<EItemInfoButton> ____currentContextInteractions)
             {
-                if (Plugin.KeybindFlea == null && Plugin.KeybindTraders == null)
+                if (Plugin.KeybindBestPrice == null && Plugin.KeybindBestPriceNoConfirmation == null)
                     return;
 
                 if (____currentContextInteractions != null)
@@ -78,15 +78,15 @@ namespace QuickSell.Patches
                 if (item.Parent?.Container?.ParentItem?.TemplateId == "55d7217a4bdc2d86028b456d")
                     return;
 
-                if (Plugin.KeybindFlea != null && Plugin.KeybindFlea.Value.IsDown())
+                if (Plugin.KeybindBestPrice != null && Plugin.KeybindBestPrice.Value.IsDown())
                 {
-                    ContextMenuPatch.SellToFlea(item);
+                    ContextMenuPatch.SellBestPrice(item, true);
                     return;
                 }
 
-                if (Plugin.KeybindTraders != null && Plugin.KeybindTraders.Value.IsDown())
+                if (Plugin.KeybindBestPriceNoConfirmation != null && Plugin.KeybindBestPriceNoConfirmation.Value.IsDown())
                 {
-                    ContextMenuPatch.SellToTraders(item);
+                    ContextMenuPatch.SellBestPrice(item, false);
                 }
             }
         }

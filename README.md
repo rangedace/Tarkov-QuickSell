@@ -16,10 +16,10 @@ Deux actions sont ajoutées au menu contextuel des objets de la réserve :
 - `QuickSell (Trader)` vend l’objet au marchand qui propose le meilleur prix ;
 - `QuickSell (Flea)` publie l’objet au marché aux puces au prix moyen affiché dans la fenêtre de mise en vente.
 
-Le mod ajoute également deux raccourcis clavier :
+Le mod ajoute également deux raccourcis « meilleur prix ». Ils comparent l’offre du meilleur marchand au bénéfice net du marché aux puces, après déduction des frais :
 
-- `M` : vendre au meilleur marchand ;
-- `N` : publier au marché aux puces.
+- `M` : choisir automatiquement la destination la plus rentable, puis demander confirmation ;
+- `N` : choisir automatiquement la destination la plus rentable et vendre immédiatement, sans confirmation.
 
 Une fenêtre de confirmation affiche le montant total avant la vente. Pour le marché aux puces, elle indique aussi les frais de mise en vente et le bénéfice net estimé.
 
@@ -44,9 +44,9 @@ Lorsque UIFixes 2.5 ou plus récent est installé, l’intégration de la sélec
 
 1. Sélectionnez plusieurs objets de la réserve avec `Maj` + clic ou avec une zone de sélection.
 2. Faites un clic droit sur l’un des objets sélectionnés, puis choisissez `QuickSell (Trader)` ou `QuickSell (Flea)`.
-3. Vous pouvez aussi appuyer sur `M` ou `N` pendant que la sélection est active, sans avoir à survoler un objet.
+3. Vous pouvez aussi appuyer sur `M` ou `N` pendant que la sélection est active, sans avoir à survoler un objet. La meilleure destination est calculée séparément pour chaque objet.
 
-Une seule confirmation est affichée pour l’ensemble de la sélection, puis les opérations sont exécutées l’une après l’autre.
+Avec `M`, une seule confirmation est affichée pour l’ensemble de la sélection. Avec `N`, la vente démarre sans confirmation. Dans les deux cas, les opérations sont exécutées l’une après l’autre.
 
 Pour forcer l’activation ou la désactivation de cette intégration, ajoutez la propriété `EnableUIFixesIntegration` avec la valeur `true` ou `false` dans `config.json`.
 
@@ -58,7 +58,7 @@ Le fichier `BepInEx/plugins/QuickSell/config.json` accepte les options suivantes
 | --- | --- | --- |
 | `EnableQuickSellFlea` | `true` | Active la vente rapide au marché aux puces. |
 | `EnableQuickSellTraders` | `true` | Active la vente rapide aux marchands. |
-| `ShowConfirmationDialog` | `true` | Affiche une confirmation avant chaque vente. |
+| `ShowConfirmationDialog` | `true` | Affiche une confirmation pour les ventes lancées depuis le menu contextuel. Le raccourci `M` confirme toujours et `N` ne confirme jamais. |
 | `TradersBlacklist` | `[]` | Liste des noms de marchands à ignorer. |
 | `AvgPricePercent` | `100` | Pourcentage du prix moyen utilisé au marché aux puces. |
 | `IgnoreFleaCapacity` | `false` | Ignore la vérification du nombre maximal d’offres. |

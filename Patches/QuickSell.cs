@@ -24,6 +24,19 @@ namespace QuickSell.Patches
     {
         private static Trader[] traders = null;
 
+        private sealed class BestPriceChoice
+        {
+            public Item Item;
+            public Trader Trader;
+            public int TraderPrice;
+            public int FleaUnitPrice;
+            public int FleaFee;
+            public int FleaNetPrice;
+            public bool UseFlea;
+
+            public int SelectedNetPrice => UseFlea ? FleaNetPrice : TraderPrice;
+        }
+
         private static IEftSession GetSession()
         {
             var session = ItemUiContext.Instance?.Session ??
@@ -67,6 +80,229 @@ namespace QuickSell.Patches
             }
 
             return interactions;
+        }
+
+        public static void SellBestPrice(Item item, bool showConfirmation)
+        {
+            var items = GetItemsToSell(item)
+                .Where(selectedItem => selectedItem != null)
+                .GroupBy(selectedItem => selectedItem.Id)
+                .Select(group => group.First())
+                .ToList();
+
+            if (items.Count == 0)
+            {
+                Utils.SendError("No items are selected");
+                return;
+            }
+
+            try
+            {
+                var session = GetSession();
+                if (session == null) return;
+
+                var choices = items.Select(selectedItem =>
+                {
+                    var trader = Plugin.EnableQuickSellTraders ? SelectTrader(selectedItem) : null;
+                    var traderPrice = trader?.GetUserItemPrice(selectedItem)?.Amount ?? 0;
+                    return new BestPriceChoice
+                    {
+                        Item = selectedItem,
+                        Trader = trader,
+                        TraderPrice = traderPrice
+                    };
+                }).ToList();
+
+                var ragFair = session.RagFair;
+                var inventoryController = Singleton<MenuUI>.Instantiated
+                    ? Singleton<MenuUI>.Instance?.TraderScreensGroup?.InventoryController
+                    : null;
+                var canUseFlea = Plugin.EnableQuickSellFlea &&
+                                  ragFair?.Available == true &&
+                                  inventoryController != null;
+
+                if (!canUseFlea)
+                {
+                    FinalizeBestPriceSale(choices, session, showConfirmation, null);
+                    return;
+                }
+
+                var fleaContext = new RagfairNewOfferContext(
+                    inventoryController.Inventory.Stash.Grids[0],
+                    inventoryController);
+                var fleaChoices = choices
+                    .Where(choice => fleaContext.HighlightedAtRagfair(choice.Item))
+                    .ToList();
+
+                if (fleaChoices.Count == 0)
+                {
+                    FinalizeBestPriceSale(choices, session, showConfirmation, ragFair);
+                    return;
+                }
+
+                var pending = fleaChoices.Count;
+                var lockObject = new object();
+                foreach (var choice in fleaChoices)
+                {
+                    ragFair.GetMarketPrices(choice.Item.TemplateId, result =>
+                    {
+                        var completed = false;
+                        lock (lockObject)
+                        {
+                            try
+                            {
+                                choice.FleaUnitPrice = (int)Math.Ceiling(
+                                    result.avg / 100.0 * Plugin.AvgPricePercent);
+                                var grossPrice = choice.FleaUnitPrice * choice.Item.StackObjectsCount;
+                                choice.FleaFee = (int)Math.Ceiling(PriceCalculator.CalculateTaxPrice(
+                                    choice.Item,
+                                    choice.Item.StackObjectsCount,
+                                    choice.FleaUnitPrice,
+                                    false));
+                                choice.FleaNetPrice = grossPrice - choice.FleaFee;
+                            }
+                            catch (Exception ex)
+                            {
+                                Plugin.LogSource.LogWarning(ex.ToString());
+                            }
+                            finally
+                            {
+                                completed = --pending == 0;
+                            }
+                        }
+
+                        if (completed)
+                        {
+                            FinalizeBestPriceSale(choices, session, showConfirmation, ragFair);
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Utils.SendError(ex.ToString());
+                Plugin.LogSource.LogWarning(ex.ToString());
+            }
+        }
+
+        private static void FinalizeBestPriceSale(
+            List<BestPriceChoice> choices,
+            IEftSession session,
+            bool showConfirmation,
+            RagFair ragFair)
+        {
+            var availableFleaSlots = int.MaxValue;
+            if (!Plugin.IgnoreFleaCapacity && ragFair != null)
+            {
+                availableFleaSlots = Math.Max(
+                    0,
+                    ragFair.GetMaxOffersCount(ragFair.MyRating) - ragFair.MyOffersCount);
+            }
+
+            var fleaChoices = new HashSet<BestPriceChoice>(choices
+                .Where(choice =>
+                    choice.FleaUnitPrice > 0 &&
+                    choice.FleaNetPrice > choice.TraderPrice)
+                .OrderByDescending(choice => choice.FleaNetPrice - choice.TraderPrice)
+                .Take(availableFleaSlots));
+
+            foreach (var choice in choices)
+            {
+                choice.UseFlea = fleaChoices.Contains(choice);
+            }
+
+            var validChoices = choices
+                .Where(choice => choice.UseFlea || choice.Trader != null)
+                .ToList();
+            if (validChoices.Count == 0)
+            {
+                Utils.SendError("No selected items can be sold");
+                return;
+            }
+
+            Action execute = () => ExecuteBestPriceSale(validChoices, session);
+            if (!showConfirmation)
+            {
+                execute();
+                return;
+            }
+
+            var traderCount = validChoices.Count(choice => !choice.UseFlea);
+            var fleaCount = validChoices.Count - traderCount;
+            var totalNetPrice = validChoices.Sum(choice => choice.SelectedNetPrice);
+            var totalFleaFees = validChoices
+                .Where(choice => choice.UseFlea)
+                .Sum(choice => choice.FleaFee);
+            ShowBestPriceConfirmation(
+                execute,
+                validChoices.Count,
+                traderCount,
+                fleaCount,
+                totalNetPrice,
+                totalFleaFees);
+        }
+
+        private static void ExecuteBestPriceSale(List<BestPriceChoice> choices, IEftSession session)
+        {
+            var choicesById = choices.ToDictionary(choice => choice.Item.Id);
+            Action<Item> sell = selectedItem =>
+            {
+                if (selectedItem == null || !choicesById.TryGetValue(selectedItem.Id, out var choice))
+                {
+                    return;
+                }
+
+                if (choice.UseFlea)
+                {
+                    DoFleaOffer(choice.Item, session, choice.FleaUnitPrice);
+                }
+                else
+                {
+                    SellTrader(choice.Item, choice.Trader, choice.TraderPrice);
+                }
+            };
+
+            if (IsMultiSelectActive())
+            {
+                MultiSelect.Apply(sell, ItemUiContext.Instance);
+                return;
+            }
+
+            foreach (var choice in choices)
+            {
+                sell(choice.Item);
+            }
+        }
+
+        private static void ShowBestPriceConfirmation(
+            Action callback,
+            int count,
+            int traderCount,
+            int fleaCount,
+            int totalNetPrice,
+            int totalFleaFees)
+        {
+            var itemUiContext = ItemUiContext.Instance;
+            if (itemUiContext == null)
+            {
+                callback();
+                return;
+            }
+
+            var itemLabel = count == 1 ? "item" : "items";
+            var message = $"Sell {count} {itemLabel} using the best net price?\n\n" +
+                          $"Traders: {traderCount}\n" +
+                          $"Flea: {fleaCount}\n" +
+                          $"Flea fees: {totalFleaFees:N0} ₽\n" +
+                          $"Net profit: {totalNetPrice:N0} ₽";
+            itemUiContext.ShowMessageWindow(
+                message,
+                callback,
+                () => { },
+                null,
+                0f,
+                false,
+                TextAlignmentOptions.Center);
         }
 
         [PatchPrefix]
@@ -172,9 +408,22 @@ namespace QuickSell.Patches
                 }
 
                 var price = bestTrader.GetUserItemPrice(item).Value.Amount;
+                SellTrader(item, bestTrader, price);
+            }
+            catch (Exception ex)
+            {
+                Utils.SendError(ex.ToString());
+                Plugin.LogSource.LogWarning(ex.ToString());
+            }
+        }
+
+        private static void SellTrader(Item item, Trader trader, int price)
+        {
+            try
+            {
                 Utils.SendNotification($"Profit: {price}");
 
-                var interactions = GetTraderInteractions(bestTrader);
+                var interactions = GetTraderInteractions(trader);
                 if (interactions is null)
                 {
                     Utils.SendError("Failed to get trader interactions");
@@ -182,11 +431,10 @@ namespace QuickSell.Patches
                 }
 
                 interactions.ConfirmSell(
-                    bestTrader.Id,
+                    trader.Id,
                     [new TradingItemReference { Item = item, Count = item.StackObjectsCount }],
                     price,
-                    new Callback(PlaySellSound)
-                );
+                    new Callback(PlaySellSound));
             }
             catch (Exception ex)
             {
