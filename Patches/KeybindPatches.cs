@@ -37,22 +37,18 @@ namespace QuickSell.Patches
             }
 
             [PatchPostfix]
-            private static void Postfix(
-                ItemUiContext __instance,
-                ContextInteractions<EItemInfoButton> ____currentContextInteractions)
+            private static void Postfix(ItemUiContext __instance)
             {
                 if (Plugin.KeybindBestPrice == null && Plugin.KeybindBestPriceNoConfirmation == null)
-                    return;
-
-                if (____currentContextInteractions != null)
                     return;
 
                 if (Singleton<GameWorld>.Instantiated && Singleton<GameWorld>.Instance is not HideoutGameWorld)
                     return;
 
-                if (Singleton<MenuUI>.Instantiated &&
-                    Singleton<MenuUI>.Instance.HideoutAreaTransferItemsScreen != null &&
-                    Singleton<MenuUI>.Instance.HideoutAreaTransferItemsScreen.isActiveAndEnabled)
+                var menuUi = Singleton<MenuUI>.Instantiated
+                    ? Singleton<MenuUI>.Instance
+                    : null;
+                if (menuUi?.HideoutAreaTransferItemsScreen?.isActiveAndEnabled == true)
                     return;
 
                 if (TextboxActive())

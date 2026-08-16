@@ -38,18 +38,6 @@ Une fenêtre de confirmation affiche le montant total avant la vente. Pour le ma
 
 Le mod peut être ajouté ou retiré d’un profil existant : il ne modifie pas les données du profil.
 
-## Utilisation avec UIFixes
-
-Lorsque UIFixes 2.5 ou plus récent est installé, l’intégration de la sélection multiple est activée automatiquement :
-
-1. Sélectionnez plusieurs objets de la réserve avec `Maj` + clic ou avec une zone de sélection.
-2. Faites un clic droit sur l’un des objets sélectionnés, puis choisissez `QuickSell (Trader)` ou `QuickSell (Flea)`.
-3. Vous pouvez aussi appuyer sur `M` ou `N` pendant que la sélection est active, sans avoir à survoler un objet. La meilleure destination est calculée séparément pour chaque objet.
-
-Avec `M`, une seule confirmation est affichée pour l’ensemble de la sélection. Avec `N`, la vente démarre sans confirmation. Dans les deux cas, les opérations sont exécutées l’une après l’autre.
-
-Pour forcer l’activation ou la désactivation de cette intégration, ajoutez la propriété `EnableUIFixesIntegration` avec la valeur `true` ou `false` dans `config.json`.
-
 ## Configuration
 
 Le fichier `BepInEx/plugins/QuickSell/config.json` accepte les options suivantes :

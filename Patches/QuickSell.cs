@@ -39,10 +39,11 @@ namespace QuickSell.Patches
 
         private static IEftSession GetSession()
         {
+            var menuUi = Singleton<MenuUI>.Instantiated
+                ? Singleton<MenuUI>.Instance
+                : null;
             var session = ItemUiContext.Instance?.Session ??
-                          (Singleton<MenuUI>.Instantiated
-                              ? Singleton<MenuUI>.Instance?.TraderScreensGroup?.Session
-                              : null);
+                          menuUi?.TraderScreensGroup?.Session;
             if (session == null)
             {
                 Utils.SendError("IEftSession is null");
@@ -114,9 +115,10 @@ namespace QuickSell.Patches
                 }).ToList();
 
                 var ragFair = session.RagFair;
-                var inventoryController = Singleton<MenuUI>.Instantiated
-                    ? Singleton<MenuUI>.Instance?.TraderScreensGroup?.InventoryController
+                var menuUi = Singleton<MenuUI>.Instantiated
+                    ? Singleton<MenuUI>.Instance
                     : null;
+                var inventoryController = menuUi?.TraderScreensGroup?.InventoryController;
                 var canUseFlea = Plugin.EnableQuickSellFlea &&
                                   ragFair?.Available == true &&
                                   inventoryController != null;
@@ -321,11 +323,12 @@ namespace QuickSell.Patches
             var itemContext = (contextInteractions as BaseItemContextInteractions)?.ItemContext;
             if (itemContext == null || itemContext.ViewType != EItemViewType.Inventory) return;
             if (Singleton<GameWorld>.Instantiated && Singleton<GameWorld>.Instance is not HideoutGameWorld) return;
-            if (Singleton<MenuUI>.Instantiated &&
-                Singleton<MenuUI>.Instance.HideoutAreaTransferItemsScreen != null &&
-                Singleton<MenuUI>.Instance.HideoutAreaTransferItemsScreen.isActiveAndEnabled) return;
+            var menuUi = Singleton<MenuUI>.Instantiated
+                ? Singleton<MenuUI>.Instance
+                : null;
+            if (menuUi?.HideoutAreaTransferItemsScreen?.isActiveAndEnabled == true) return;
             if (item.GetAllParentItems().Any(x => x is InventoryEquipment)) return;
-            if (item.Parent.Container.ParentItem.TemplateId == "55d7217a4bdc2d86028b456d") return;
+            if (item.Parent?.Container?.ParentItem?.TemplateId == "55d7217a4bdc2d86028b456d") return;
 
             var dynamicInteractions = contextInteractions._dynamicInteractions;
             if (dynamicInteractions is null) return;
@@ -448,21 +451,24 @@ namespace QuickSell.Patches
             var items = GetItemsToSell(item);
             try
             {
-                if (!Singleton<MenuUI>.Instantiated || Singleton<MenuUI>.Instance?.TradingScreen == null)
+                var menuUi = Singleton<MenuUI>.Instantiated
+                    ? Singleton<MenuUI>.Instance
+                    : null;
+                if (menuUi?.TradingScreen == null)
                 {
                     Utils.SendError("MenuUI is not available");
                     return;
                 }
                 var session = GetSession();
                 if (session == null) return;
-                var inventoryController = Singleton<MenuUI>.Instance.TraderScreensGroup?.InventoryController;
+                var inventoryController = menuUi?.TraderScreensGroup?.InventoryController;
                 if (inventoryController == null)
                 {
                     Utils.SendError("Could not load inventory");
                     return;
                 }
                 var ragFairClass = session.RagFair;
-                if (!ragFairClass.Available)
+                if (ragFairClass?.Available != true)
                 {
                     Utils.SendError("Flea market is not available");
                     return;

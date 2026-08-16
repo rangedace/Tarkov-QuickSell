@@ -12,7 +12,7 @@ using UnityEngine;
 namespace QuickSell
 {
 
-    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.2.0")]
+    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.2.1")]
     [BepInDependency("com.SPT.core", "4.1.0")]
     [BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
