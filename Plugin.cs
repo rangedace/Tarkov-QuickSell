@@ -12,11 +12,12 @@ using UnityEngine;
 namespace QuickSell
 {
 
-    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.0.0")]
+    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.1.0")]
+    [BepInDependency("com.SPT.core", "4.1.0")]
     [BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        private static readonly Version UIFixesMinimumVersion = new(2, 5);
+        private static readonly System.Version UIFixesMinimumVersion = new(2, 5);
         private const string UIFixesPluginId = "Tyfon.UIFixes";
 
         public static bool EnableQuickSellFlea = true;
