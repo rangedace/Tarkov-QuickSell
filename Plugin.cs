@@ -12,7 +12,7 @@ using UnityEngine;
 namespace QuickSell
 {
 
-    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.3.0")]
+    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.3.1")]
     [BepInDependency("com.SPT.core", "4.1.0")]
     [BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
@@ -23,8 +23,6 @@ namespace QuickSell
         public static bool EnableQuickSellFlea = true;
 
         public static bool ShowConfirmationDialog = true;
-
-        public static double AvgPricePercent = 100;
 
         public static bool DisableKeybinds = false;
 
@@ -104,11 +102,6 @@ namespace QuickSell
             if (config.ContainsKey("ShowConfirmationDialog"))
             {
                 ShowConfirmationDialog = (bool)config["ShowConfirmationDialog"];
-            }
-
-            if (config.ContainsKey("AvgPricePercent"))
-            {
-                AvgPricePercent = (double)config["AvgPricePercent"];
             }
 
             if (config.ContainsKey("DisableKeybinds"))

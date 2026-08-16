@@ -1,6 +1,5 @@
 {
   "EnableQuickSellFlea": true,
   "ShowConfirmationDialog": true,
-  "AvgPricePercent": 100,
   "DisableKeybinds": false
 }

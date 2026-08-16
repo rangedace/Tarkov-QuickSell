@@ -51,6 +51,13 @@ namespace QuickSell.Patches
             return grids != null && grids.Length > 0 ? grids[0] : null;
         }
 
+        private static int GetLowestFleaPrice(ItemMarketPrices result)
+        {
+            return result?.min > 0
+                ? (int)Math.Ceiling(result.min)
+                : 0;
+        }
+
         protected override MethodBase GetTargetMethod()
         {
             var methodInfo = typeof(SimpleContextMenu)
@@ -187,13 +194,13 @@ namespace QuickSell.Patches
             {
                 try
                 {
-                    if (result == null)
+                    var price = GetLowestFleaPrice(result);
+                    if (price <= 0)
                     {
                         Utils.SendError("Could not get flea price");
                         return;
                     }
 
-                    var price = (int)Math.Ceiling(result.avg / 100.0 * Plugin.AvgPricePercent);
                     var fee = (int)Math.Ceiling(PriceCalculator.CalculateTaxPrice(
                         item,
                         item.StackObjectsCount,
@@ -235,9 +242,9 @@ namespace QuickSell.Patches
                     {
                         try
                         {
-                            if (result != null)
+                            var price = GetLowestFleaPrice(result);
+                            if (price > 0)
                             {
-                                var price = (int)Math.Ceiling(result.avg / 100.0 * Plugin.AvgPricePercent);
                                 prices[item.Id] = price;
                                 fees[item.Id] = (int)Math.Ceiling(PriceCalculator.CalculateTaxPrice(
                                     item,

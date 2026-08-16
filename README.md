@@ -13,7 +13,7 @@ Les versions SPT 4.0.x et antérieures ne sont pas compatibles avec cette versio
 
 Une action est ajoutée au menu contextuel des objets de la réserve :
 
-- `QuickSell (Flea)` publie l’objet au marché aux puces au prix moyen affiché dans la fenêtre de mise en vente.
+- `QuickSell (Flea)` publie l’objet au prix de l’offre la moins chère du marché aux puces.
 
 Le mod ajoute également deux raccourcis pour le marché aux puces :
 
@@ -47,7 +47,6 @@ Le fichier `BepInEx/plugins/QuickSell/config.json` accepte les options suivantes
 | --- | --- | --- |
 | `EnableQuickSellFlea` | `true` | Active la vente rapide au marché aux puces. |
 | `ShowConfirmationDialog` | `true` | Affiche une confirmation pour les ventes lancées depuis le menu contextuel. `M` + clic molette confirme toujours et `N` + clic molette ne confirme jamais. |
-| `AvgPricePercent` | `100` | Pourcentage du prix moyen utilisé au marché aux puces. |
 | `DisableKeybinds` | `false` | Désactive les raccourcis `M`/`N` + clic molette. |
 | `EnableUIFixesIntegration` | détection automatique | Force l’intégration UIFixes lorsqu’elle est définie. |
 
