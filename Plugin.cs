@@ -12,7 +12,7 @@ using UnityEngine;
 namespace QuickSell
 {
 
-    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.2.2")]
+    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.3.0")]
     [BepInDependency("com.SPT.core", "4.1.0")]
     [BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
@@ -21,14 +21,10 @@ namespace QuickSell
         private const string UIFixesPluginId = "Tyfon.UIFixes";
 
         public static bool EnableQuickSellFlea = true;
-        public static bool EnableQuickSellTraders = true;
 
         public static bool ShowConfirmationDialog = true;
-        public static string[] TradersBlacklist = [];
 
         public static double AvgPricePercent = 100;
-
-        public static bool IgnoreFleaCapacity = false;
 
         public static bool DisableKeybinds = false;
 
@@ -37,8 +33,8 @@ namespace QuickSell
             Chainloader.PluginInfos.TryGetValue(UIFixesPluginId, out var pluginInfo) &&
             pluginInfo?.Metadata?.Version >= UIFixesMinimumVersion;
 
-        internal static ConfigEntry<KeyboardShortcut> KeybindBestPrice;
-        internal static ConfigEntry<KeyboardShortcut> KeybindBestPriceNoConfirmation;
+        internal static ConfigEntry<KeyboardShortcut> KeybindSellFlea;
+        internal static ConfigEntry<KeyboardShortcut> KeybindSellFleaImmediate;
 
         public static ManualLogSource LogSource;
 
@@ -46,7 +42,6 @@ namespace QuickSell
         {
             LogSource = Logger;
             new ContextMenuPatch().Enable();
-            new TraderInventoryLoadingPatch().Enable();
 
             try
             {
@@ -67,16 +62,16 @@ namespace QuickSell
 
                 if (!DisableKeybinds)
                 {
-                    KeybindBestPrice = Config.Bind(
+                    KeybindSellFlea = Config.Bind(
                         "QuickSell",
-                        "BestPriceWithConfirmation",
+                        "SellFleaWithConfirmation",
                         new KeyboardShortcut(KeyCode.Mouse2, KeyCode.M),
-                        "Hold M and middle-click to sell at the best net price (with confirmation)");
-                    KeybindBestPriceNoConfirmation = Config.Bind(
+                        "Hold M and middle-click to sell on the flea (with confirmation)");
+                    KeybindSellFleaImmediate = Config.Bind(
                         "QuickSell",
-                        "BestPriceImmediate",
+                        "SellFleaImmediate",
                         new KeyboardShortcut(KeyCode.Mouse2, KeyCode.N),
-                        "Hold N and middle-click to immediately sell at the best net price");
+                        "Hold N and middle-click to immediately sell on the flea");
                     KeybindPatches.Enable();
                 }
             }
@@ -106,29 +101,14 @@ namespace QuickSell
                 EnableQuickSellFlea = (bool)config["EnableQuickSellFlea"];
             }
 
-            if (config.ContainsKey("EnableQuickSellTraders"))
-            {
-                EnableQuickSellTraders = (bool)config["EnableQuickSellTraders"];
-            }
-
             if (config.ContainsKey("ShowConfirmationDialog"))
             {
                 ShowConfirmationDialog = (bool)config["ShowConfirmationDialog"];
             }
 
-            if (config.ContainsKey("TradersBlacklist"))
-            {
-                TradersBlacklist = config["TradersBlacklist"].ToObject<string[]>();
-            }
-
             if (config.ContainsKey("AvgPricePercent"))
             {
                 AvgPricePercent = (double)config["AvgPricePercent"];
-            }
-
-            if (config.ContainsKey("IgnoreFleaCapacity"))
-            {
-                IgnoreFleaCapacity = (bool)config["IgnoreFleaCapacity"];
             }
 
             if (config.ContainsKey("DisableKeybinds"))

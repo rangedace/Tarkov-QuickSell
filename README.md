@@ -11,17 +11,18 @@ Les versions SPT 4.0.x et antérieures ne sont pas compatibles avec cette versio
 
 ## Fonctionnalités
 
-Deux actions sont ajoutées au menu contextuel des objets de la réserve :
+Une action est ajoutée au menu contextuel des objets de la réserve :
 
-- `QuickSell (Trader)` vend l’objet au marchand qui propose le meilleur prix ;
 - `QuickSell (Flea)` publie l’objet au marché aux puces au prix moyen affiché dans la fenêtre de mise en vente.
 
-Le mod ajoute également deux raccourcis « meilleur prix ». Ils comparent l’offre du meilleur marchand au bénéfice net du marché aux puces, après déduction des frais :
+Le mod ajoute également deux raccourcis pour le marché aux puces :
 
-- maintenir `M` + clic molette : choisir automatiquement la destination la plus rentable, puis demander confirmation ;
-- maintenir `N` + clic molette : choisir automatiquement la destination la plus rentable et vendre immédiatement, sans confirmation.
+- maintenir `M` + clic molette : publier au marché aux puces après confirmation ;
+- maintenir `N` + clic molette : publier immédiatement au marché aux puces, sans confirmation.
 
 Une fenêtre de confirmation affiche le montant total avant la vente. Pour le marché aux puces, elle indique aussi les frais de mise en vente et le bénéfice net estimé.
+
+Si le nombre maximal d’offres est atteint, une notification affiche « Tu as trop d’offres en cours » en bas de l’écran.
 
 ## Installation
 
@@ -45,11 +46,8 @@ Le fichier `BepInEx/plugins/QuickSell/config.json` accepte les options suivantes
 | Option | Valeur par défaut | Description |
 | --- | --- | --- |
 | `EnableQuickSellFlea` | `true` | Active la vente rapide au marché aux puces. |
-| `EnableQuickSellTraders` | `true` | Active la vente rapide aux marchands. |
 | `ShowConfirmationDialog` | `true` | Affiche une confirmation pour les ventes lancées depuis le menu contextuel. `M` + clic molette confirme toujours et `N` + clic molette ne confirme jamais. |
-| `TradersBlacklist` | `[]` | Liste des noms de marchands à ignorer. |
 | `AvgPricePercent` | `100` | Pourcentage du prix moyen utilisé au marché aux puces. |
-| `IgnoreFleaCapacity` | `false` | Ignore la vérification du nombre maximal d’offres. |
 | `DisableKeybinds` | `false` | Désactive les raccourcis `M`/`N` + clic molette. |
 | `EnableUIFixesIntegration` | détection automatique | Force l’intégration UIFixes lorsqu’elle est définie. |
 

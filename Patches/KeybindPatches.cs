@@ -39,7 +39,7 @@ namespace QuickSell.Patches
             [PatchPostfix]
             private static void Postfix(ItemUiContext __instance)
             {
-                if (Plugin.KeybindBestPrice == null && Plugin.KeybindBestPriceNoConfirmation == null)
+                if (Plugin.KeybindSellFlea == null && Plugin.KeybindSellFleaImmediate == null)
                     return;
 
                 if (Singleton<GameWorld>.Instantiated && Singleton<GameWorld>.Instance is not HideoutGameWorld)
@@ -74,15 +74,15 @@ namespace QuickSell.Patches
                 if (item.Parent?.Container?.ParentItem?.TemplateId == "55d7217a4bdc2d86028b456d")
                     return;
 
-                if (Plugin.KeybindBestPrice != null && Plugin.KeybindBestPrice.Value.IsDown())
+                if (Plugin.KeybindSellFlea != null && Plugin.KeybindSellFlea.Value.IsDown())
                 {
-                    ContextMenuPatch.SellBestPrice(item, true);
+                    ContextMenuPatch.SellToFlea(item, true);
                     return;
                 }
 
-                if (Plugin.KeybindBestPriceNoConfirmation != null && Plugin.KeybindBestPriceNoConfirmation.Value.IsDown())
+                if (Plugin.KeybindSellFleaImmediate != null && Plugin.KeybindSellFleaImmediate.Value.IsDown())
                 {
-                    ContextMenuPatch.SellBestPrice(item, false);
+                    ContextMenuPatch.SellToFlea(item, false);
                 }
             }
         }
