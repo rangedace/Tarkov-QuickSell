@@ -12,7 +12,7 @@ using UnityEngine;
 namespace QuickSell
 {
 
-    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.2.1")]
+    [BepInPlugin("QuickSell.UniqueGUID", "QuickSell", "2.2.2")]
     [BepInDependency("com.SPT.core", "4.1.0")]
     [BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
@@ -69,14 +69,14 @@ namespace QuickSell
                 {
                     KeybindBestPrice = Config.Bind(
                         "QuickSell",
-                        "BestPrice",
-                        new KeyboardShortcut(KeyCode.M),
-                        "Sell to the best trader or on the flea, whichever gives the best net price (with confirmation)");
+                        "BestPriceWithConfirmation",
+                        new KeyboardShortcut(KeyCode.Mouse2, KeyCode.M),
+                        "Hold M and middle-click to sell at the best net price (with confirmation)");
                     KeybindBestPriceNoConfirmation = Config.Bind(
                         "QuickSell",
-                        "BestPriceNoConfirmation",
-                        new KeyboardShortcut(KeyCode.N),
-                        "Immediately sell to the best trader or on the flea, whichever gives the best net price");
+                        "BestPriceImmediate",
+                        new KeyboardShortcut(KeyCode.Mouse2, KeyCode.N),
+                        "Hold N and middle-click to immediately sell at the best net price");
                     KeybindPatches.Enable();
                 }
             }

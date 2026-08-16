@@ -23,6 +23,8 @@ namespace QuickSell.Patches
     internal class ContextMenuPatch : ModulePatch
     {
         private static Trader[] traders = null;
+        private static readonly FieldInfo InventoryControllerField = typeof(ItemUiContext)
+            .GetField("_inventoryController", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private sealed class BestPriceChoice
         {
@@ -39,17 +41,30 @@ namespace QuickSell.Patches
 
         private static IEftSession GetSession()
         {
-            var menuUi = Singleton<MenuUI>.Instantiated
-                ? Singleton<MenuUI>.Instance
-                : null;
-            var session = ItemUiContext.Instance?.Session ??
-                          menuUi?.TraderScreensGroup?.Session;
+            var session = ItemUiContext.Instance?.Session;
             if (session == null)
             {
                 Utils.SendError("IEftSession is null");
             }
 
             return session;
+        }
+
+        private static InventoryController GetInventoryController()
+        {
+            var itemUiContext = ItemUiContext.Instance;
+            if (itemUiContext == null || InventoryControllerField == null)
+            {
+                return null;
+            }
+
+            return InventoryControllerField.GetValue(itemUiContext) as InventoryController;
+        }
+
+        private static Grid GetStashGrid(InventoryController inventoryController)
+        {
+            var grids = inventoryController?.Inventory?.Stash?.Grids;
+            return grids != null && grids.Length > 0 ? grids[0] : null;
         }
 
         protected override MethodBase GetTargetMethod()
@@ -115,13 +130,12 @@ namespace QuickSell.Patches
                 }).ToList();
 
                 var ragFair = session.RagFair;
-                var menuUi = Singleton<MenuUI>.Instantiated
-                    ? Singleton<MenuUI>.Instance
-                    : null;
-                var inventoryController = menuUi?.TraderScreensGroup?.InventoryController;
+                var inventoryController = GetInventoryController();
+                var stashGrid = GetStashGrid(inventoryController);
                 var canUseFlea = Plugin.EnableQuickSellFlea &&
                                   ragFair?.Available == true &&
-                                  inventoryController != null;
+                                  inventoryController != null &&
+                                  stashGrid != null;
 
                 if (!canUseFlea)
                 {
@@ -130,7 +144,7 @@ namespace QuickSell.Patches
                 }
 
                 var fleaContext = new RagfairNewOfferContext(
-                    inventoryController.Inventory.Stash.Grids[0],
+                    stashGrid,
                     inventoryController);
                 var fleaChoices = choices
                     .Where(choice => fleaContext.HighlightedAtRagfair(choice.Item))
@@ -451,20 +465,18 @@ namespace QuickSell.Patches
             var items = GetItemsToSell(item);
             try
             {
-                var menuUi = Singleton<MenuUI>.Instantiated
-                    ? Singleton<MenuUI>.Instance
-                    : null;
-                if (menuUi?.TradingScreen == null)
-                {
-                    Utils.SendError("MenuUI is not available");
-                    return;
-                }
                 var session = GetSession();
                 if (session == null) return;
-                var inventoryController = menuUi?.TraderScreensGroup?.InventoryController;
+                var inventoryController = GetInventoryController();
                 if (inventoryController == null)
                 {
                     Utils.SendError("Could not load inventory");
+                    return;
+                }
+                var stashGrid = GetStashGrid(inventoryController);
+                if (stashGrid == null)
+                {
+                    Utils.SendError("Could not load stash grid");
                     return;
                 }
                 var ragFairClass = session.RagFair;
@@ -473,7 +485,7 @@ namespace QuickSell.Patches
                     Utils.SendError("Flea market is not available");
                     return;
                 }
-                var helper = new RagfairNewOfferContext(inventoryController.Inventory.Stash.Grids[0], inventoryController);
+                var helper = new RagfairNewOfferContext(stashGrid, inventoryController);
                 var validItems = items.Where(i => helper.HighlightedAtRagfair(i)).ToList();
                 if (validItems.Count == 0)
                 {
@@ -679,7 +691,7 @@ namespace QuickSell.Patches
             }
 
             traders = tradingSession.Traders
-                .Where(trader => !trader.Settings.AvailableInRaid)
+                .Where(trader => trader?.Settings != null && !trader.Settings.AvailableInRaid)
                 .ToArray();
         }
 
